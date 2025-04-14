@@ -1,105 +1,157 @@
-import React, { useState, useRef } from "react";
-import { motion } from "framer-motion";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
 
 const templates = [
-  { id: 1, name: "Simple", className: "border p-4 bg-gray-50 rounded" },
-  { id: 2, name: "Professional", className: "border-2 p-6 bg-white shadow-lg rounded" },
-  { id: 3, name: "Modern", className: "border p-5 bg-blue-50 rounded-lg" }
+  {
+    id: 1,
+    name: "Enter Full Name",
+    title: "Enter Job Title",
+    image: "/images/default-template.png",
+    photo: "/images/default-photo.png",
+    contact: {
+      address: "Enter Address",
+      email: "Enter Email",
+      phone: "Enter Phone Number",
+      linkedin: "Enter LinkedIn URL",
+      github: "Enter GitHub URL",
+    },
+    profile: "Write a brief professional summary about yourself...",
+    experience: [
+      {
+        role: "Enter Job Role",
+        company: "Enter Company Name",
+        period: "Start Date - End Date",
+        location: "Enter Location",
+        details: "Describe your responsibilities and key achievements in this role...",
+      },
+    ],
+    education: [
+      {
+        degree: "Enter Degree Name",
+        university: "Enter University Name",
+        period: "Start Year - End Year",
+      },
+    ],
+    skills: ["Enter skill", "Add more skills..."],
+    achievements: ["Enter an achievement", "Add more achievements..."],
+    tech_stack: ["Enter technology", "Add more technologies..."],
+  },
+  {
+    id: 2,
+    name: "Sample Resume",
+    title: "Software Engineer",
+    image: "/images/sample-template.png",
+    photo: "/images/sample-photo.png",
+    contact: {
+      address: "123 Street, City, Country",
+      email: "sample@example.com",
+      phone: "123-456-7890",
+      linkedin: "https://linkedin.com/in/sample",
+      github: "https://github.com/sample",
+    },
+    profile: "An experienced software engineer with expertise in web development and AI technologies...",
+    experience: [
+      {
+        role: "Software Engineer",
+        company: "Tech Corp",
+        period: "2020 - Present",
+        location: "Remote",
+        details: "Worked on multiple AI-driven web applications, improving efficiency and scalability...",
+      },
+    ],
+    education: [
+      {
+        degree: "BSc in Computer Science",
+        university: "Tech University",
+        period: "2016 - 2020",
+      },
+    ],
+    skills: ["JavaScript", "React", "Node.js", "AI Integration"],
+    achievements: ["Built an AI-powered resume builder", "Developed a scalable web application"],
+    tech_stack: ["React", "Node.js", "MongoDB", "Tailwind CSS"],
+  },
 ];
 
-const ResumeBuilder = () => {
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    summary: "",
-    experience: "",
-    skills: "",
-    education: "",
-  });
-  const resumeRef = useRef(null);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+const ResumeTemplateCarousel = () => {
+  const navigate = useNavigate();
+ 
+  const handleTemplateSelect = (template) => {
+    if (template.id === 1) {
+      navigate(`/edit/${template.id}`, { state: { template } });
+    } else if (template.id === 2) {
+      navigate(`/edit/template2`, { state: { template } });
+    } else {
+      navigate(`/edit/${template.id}`, { state: { template } });
+    }
   };
 
-  const downloadPDF = () => {
-    html2canvas(resumeRef.current).then((canvas) => {
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF();
-      pdf.addImage(imgData, "PNG", 10, 10, 180, 250);
-      pdf.save("resume.pdf");
-    });
-  };
+  
+  
+  
 
   return (
-    <div className="min-h-screen bg-gray-100 p-10">
-      <h1 className="text-4xl font-bold text-center text-blue-700 mb-6">Resume Builder</h1>
+    <div className="min-h-screen bg-gray-100 p-4 md:p-10 flex flex-col items-center">
+      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
+        {/* Left Container: Title & Description */}
+        <div className="flex flex-col justify-center text-center md:text-left">
+          <h1 className="text-2xl md:text-3xl font-bold mb-4">Choose a Resume Template</h1>
+          <p className="text-gray-600 text-base md:text-lg">
+            Select a template that best suits your career and customize it with ease.
+          </p>
+        </div>
 
-      {!selectedTemplate ? (
-        <div>
-          <h2 className="text-2xl text-center font-semibold mb-6">Choose a Resume Template</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        {/* Right Container: Swiper Carousel */}
+        <div className="w-full">
+          <Swiper
+            spaceBetween={20}
+            slidesPerView={1}
+            breakpoints={{ 
+              640: { slidesPerView: 2 }, 
+              1024: { slidesPerView: 3 } 
+            }}
+            pagination={{ 
+              clickable: true,
+              dynamicBullets: true 
+            }}
+            autoplay={{ 
+              delay: 3000, 
+              disableOnInteraction: false 
+            }}
+            navigation={true}
+            modules={[Pagination, Navigation, Autoplay]}
+            className="w-full h-full"
+          >
             {templates.map((template) => (
-              <motion.div
-                key={template.id}
-                whileHover={{ scale: 1.05 }}
-                onClick={() => setSelectedTemplate(template)}
-                className="cursor-pointer p-4 bg-white shadow-lg rounded-lg text-center"
-              >
-                <div className="h-40 flex items-center justify-center text-xl font-semibold">
-                  {template.name}
+              <SwiperSlide key={template.id} className="pb-10">
+                <div
+                  className="cursor-pointer bg-white shadow-md rounded-lg overflow-hidden text-center hover:shadow-xl transition duration-300"
+                  onClick={() => handleTemplateSelect(template)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && handleTemplateSelect(template)}
+                >
+                  <img 
+                    src={template.image} 
+                    alt={template.name} 
+                    className="w-full h-64 object-contain rounded-t-lg" 
+                    loading="lazy"
+                  />
+                  <div className="p-4">
+                    <h3 className="font-medium">{template.name}</h3>
+                  </div>
                 </div>
-              </motion.div>
+              </SwiperSlide>
             ))}
-          </div>
+          </Swiper>
         </div>
-      ) : (
-        <div className="flex flex-col md:flex-row gap-10">
-          {/* Resume Form */}
-          <div className="bg-white p-6 shadow-md rounded-lg w-full md:w-1/3">
-            <h2 className="text-xl font-semibold mb-4">Fill in Your Details</h2>
-            <input type="text" name="name" placeholder="Full Name" onChange={handleChange} className="w-full p-2 mb-3 border rounded" />
-            <input type="email" name="email" placeholder="Email" onChange={handleChange} className="w-full p-2 mb-3 border rounded" />
-            <input type="text" name="phone" placeholder="Phone Number" onChange={handleChange} className="w-full p-2 mb-3 border rounded" />
-            <textarea name="summary" placeholder="Professional Summary" onChange={handleChange} className="w-full p-2 mb-3 border rounded"></textarea>
-            <textarea name="experience" placeholder="Work Experience" onChange={handleChange} className="w-full p-2 mb-3 border rounded"></textarea>
-            <textarea name="skills" placeholder="Skills" onChange={handleChange} className="w-full p-2 mb-3 border rounded"></textarea>
-            <textarea name="education" placeholder="Education" onChange={handleChange} className="w-full p-2 mb-3 border rounded"></textarea>
-            <button onClick={downloadPDF} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Download PDF</button>
-          </div>
-
-          {/* Resume Preview with Canva-like Design */}
-          <motion.div ref={resumeRef} className={`relative w-full md:w-2/3 p-6 shadow-md rounded-lg ${selectedTemplate.className}`}>  
-            <h2 className="text-xl font-semibold mb-4">Resume Preview</h2>
-            <div className="border-2 border-gray-300 p-6 bg-white rounded-md shadow-lg">
-              <p className="text-2xl font-bold text-center">{formData.name || "Your Name"}</p>
-              <p className="text-center text-gray-600">{formData.email || "youremail@example.com"}</p>
-              <p className="text-center text-gray-600">{formData.phone || "123-456-7890"}</p>
-              <hr className="my-4" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-semibold">Summary</h3>
-                  <p>{formData.summary || "Write your professional summary here..."}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold">Skills</h3>
-                  <p>{formData.skills || "Mention your skills..."}</p>
-                </div>
-              </div>
-              <h3 className="font-semibold mt-4">Experience</h3>
-              <p>{formData.experience || "List your work experience..."}</p>
-              <h3 className="font-semibold mt-4">Education</h3>
-              <p>{formData.education || "Add your educational background..."}</p>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
 
-export default ResumeBuilder;
+export default ResumeTemplateCarousel;

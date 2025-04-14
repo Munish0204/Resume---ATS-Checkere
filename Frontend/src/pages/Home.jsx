@@ -1,6 +1,10 @@
 import React from "react";
+import axios from "axios";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import Chatbot from "../components/Chatbot";
+import ReactMarkdown from "react-markdown";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
@@ -43,6 +47,10 @@ const Home = () => {
           </Link>
         </motion.div>
       </section>
+
+     
+      {/* AI Chatbot */}
+      <Chatbot />
 
       {/* Features Section */}
       <section className="py-16 bg-white">
@@ -140,20 +148,72 @@ const TemplateCard = ({ image }) => (
 )
 
 // AI Resume Demo Component
-const AIResumeDemo = () => {
-  return (
-    <div className="max-w-xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <input
-        type="text"
-        placeholder="Enter Job Title (e.g., Data Scientist)"
-        className="w-full p-3 border border-gray-300 rounded-md mb-4"
-      />
-      <button className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition">
-        Generate AI Summary
-      </button>
-    </div>
-  );
-};
+
+  const AIResumeDemo = () => {
+    const [jobTitle, setJobTitle] = useState("");
+    const [summary, setSummary] = useState("");
+    const [loading, setLoading] = useState(false);
+  
+    // Function to generate AI-powered resume summary
+    const generateSummary = async () => {
+      if (!jobTitle.trim()) {
+        alert("Please enter a job title.");
+        return;
+      }
+  
+      setLoading(true);
+      setSummary(""); // Reset previous summary
+  
+      try {
+        const response = await axios.post(
+          "http://localhost:8000/generate-summary",
+          { jobTitle }, // Send the job title in the request body
+          { headers: { "Content-Type": "application/json" } } // Ensure JSON format
+        );
+  
+        if (response.data && response.data.summary) {
+          setSummary(response.data.summary); // Store the AI-generated summary
+        } else {
+          alert("Failed to generate summary. Please try again.");
+        }
+      } catch (error) {
+        console.error("❌ Error generating summary:", error);
+        alert("Error connecting to AI service.");
+      }
+  
+      setLoading(false);
+    };
+  
+    return (
+      <div className="max-w-xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+        <input
+          type="text"
+          placeholder="Enter Job Title (e.g., Data Scientist)"
+          className="w-full p-3 border border-gray-300 rounded-md mb-4"
+          value={jobTitle}
+          onChange={(e) => setJobTitle(e.target.value)}
+        />
+        <button
+          onClick={generateSummary}
+          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition"
+          disabled={loading}
+        >
+          {loading ? "Generating..." : "Generate AI Summary"}
+        </button>
+  
+        {/* Display AI-Generated Summary */}
+        {summary && (
+         <div className="mt-4 p-4 bg-gray-100 border-l-4 border-blue-600 rounded">
+         <h3 className="text-lg font-semibold text-blue-700">AI-Generated Summary:</h3>
+         <div className="text-gray-700 mt-2">
+  <ReactMarkdown>{summary}</ReactMarkdown>
+</div>
+
+         </div>
+        )}
+      </div>
+    );
+  };
 
 
 

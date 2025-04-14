@@ -10,7 +10,7 @@ const Navbar = () => {
         <NavLink to="/resume-builder" text="Resume Builder" />
         <NavLink to="/ats-checker" text="ATS Checker" />
         <NavLink to="/interview-prep" text="Interview Prep" />
-        <NavLink to="/application-tracker" text="Tracker" />
+        <NavLink to="/cover-letter" text="Cover Letter" />
       </div>
     </nav>
   );
