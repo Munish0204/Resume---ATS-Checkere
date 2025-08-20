@@ -1,5 +1,8 @@
 import { useState, useRef } from "react";
 import { Download, PlusCircle, Trash } from "lucide-react";
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+
 
 const ResumeTemplate = () => {
   const resumeRef = useRef(null);
@@ -219,9 +222,120 @@ const ResumeTemplate = () => {
   };
 
   // Download PDF function (placeholder - would need actual implementation)
-  const downloadResume = () => {
-    alert("PDF download functionality would be implemented here");
+  const handleDownload = async () => {
+    const input = resumeRef.current;
+    
+    if (!input) {
+      alert("Resume element not found.");
+      return;
+    }
+  
+    // Create a print-optimized clone
+    const clone = input.cloneNode(true);
+    clone.style.position = 'absolute';
+    clone.style.left = '-9999px';
+    clone.style.width = '210mm';
+    clone.style.fontFamily = 'Arial, sans-serif';
+    clone.style.color = '#000000';
+    clone.style.backgroundColor = '#ffffff';
+    clone.style.padding = '15mm'; // Add padding to match PDF margins
+    document.body.appendChild(clone);
+  
+    try {
+      // Optimize all elements for print
+      const allElements = clone.querySelectorAll('*');
+      allElements.forEach(el => {
+        el.style.color = '#000000';
+        el.style.backgroundColor = 'transparent';
+        el.style.boxShadow = 'none';
+        el.style.textShadow = 'none';
+        el.style.filter = 'none';
+        el.style.borderColor = '#000000';
+        el.style.borderWidth = el.tagName === 'HR' ? '1px' : '0'; // Preserve HR borders
+      });
+  
+      // PDF dimensions and margins
+      const pdfWidth = 210; // A4 width in mm
+      const pdfHeight = 297; // A4 height in mm
+      const margin = 15; // 15mm margin all around
+      const contentWidth = pdfWidth - (2 * margin);
+      
+      // Generate high-quality canvas
+      const canvas = await html2canvas(clone, {
+        scale: 3, // Higher scale for better text quality
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: clone.offsetWidth,
+        height: clone.scrollHeight,
+        windowWidth: clone.scrollWidth,
+        windowHeight: clone.scrollHeight,
+        logging: true,
+        letterRendering: true, // Better text rendering
+        allowTaint: true
+      });
+  
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        hotfixes: ['px_scaling'] // Fix PDF.js scaling issues
+      });
+      
+      // Calculate image dimensions
+      const imgWidth = contentWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      // Multi-page handling with proper content splitting
+      if (imgHeight > (pdfHeight - (2 * margin))) {
+        let heightLeft = imgHeight;
+        let position = 0;
+        const pageHeight = pdfHeight - (2 * margin);
+        
+        while (heightLeft > 0) {
+          if (position > 0) {
+            pdf.addPage();
+          }
+          
+          const sectionHeight = Math.min(heightLeft, pageHeight);
+          pdf.addImage(
+            canvas,
+            'PNG',
+            margin,
+            margin - position,
+            imgWidth,
+            imgHeight,
+            undefined,
+            'FAST'
+          );
+          
+          position += sectionHeight;
+          heightLeft -= sectionHeight;
+        }
+      } else {
+        // Single page
+        pdf.addImage(
+          canvas,
+          'PNG',
+          margin,
+          margin,
+          imgWidth,
+          imgHeight,
+          undefined,
+          'FAST'
+        );
+      }
+  
+      pdf.save('resume.pdf');
+    } catch (error) {
+      console.error('PDF Generation Error:', error);
+      alert('Failed to generate PDF. Please try again or contact support.');
+    } finally {
+      if (document.body.contains(clone)) {
+        document.body.removeChild(clone);
+      }
+    }
   };
+
 
   return (
     <div className="flex flex-row gap-6 w-full h-screen bg-gray-50">
@@ -596,14 +710,18 @@ const ResumeTemplate = () => {
             </div>
           )}
         </div>
-
-        {/* Download Button */}
-        <button
-          onClick={downloadResume}
-          className="bg-blue-600 text-white py-2 px-4 rounded flex items-center gap-2 hover:bg-blue-700 transition"
-        >
-          <Download size={18} /> Download Resume
-        </button>
+         {/* Download Button */}
+         <div className="mt-6 flex justify-center">
+                                  <button
+                                  onClick={handleDownload}
+                                  
+                                  className="download-button w-full flex items-center justify-center gap-2 py-3 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                                >
+                                  
+                                  <Download size={16} /> Download as PDF
+                                </button>
+                                
+                              </div>
       </div>
 
       {/* Preview Section */}
@@ -616,15 +734,29 @@ const ResumeTemplate = () => {
               <p className="text-xl text-gray-600">{resumeData.title || "Your Title"}</p>
               
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-700">
-                {resumeData.contact.map((item, index) => (
-                  <div key={index} className="flex items-center gap-1">
-                    <span className="font-medium">{item.type}:</span> {item.value}
-                  </div>
-                ))}
+                {resumeData.contact.length > 0 ? (
+                  resumeData.contact.map((item, index) => (
+                    <div key={index} className="flex items-center gap-1">
+                      <span className="font-medium">{item.type}:</span> {item.value}
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div className="flex items-center gap-1">
+                      <span className="font-medium">Email:</span> youremail@example.com
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="font-medium">Phone:</span> (123) 456-7890
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="font-medium">Location:</span> City, State
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             
-            {resumeData.photo && (
+            {resumeData.photo ? (
               <div className="ml-4">
                 <img 
                   src={resumeData.photo} 
@@ -632,30 +764,30 @@ const ResumeTemplate = () => {
                   className="w-24 h-24 rounded-full object-cover border-2 border-gray-300" 
                 />
               </div>
+            ) : (
+              <div className="ml-4 w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-300">
+                <span className="text-gray-400 text-xs text-center">Photo</span>
+              </div>
             )}
           </div>
 
-          {/* Summary Section */}
-          {resumeData.summary && (
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-800 border-b pb-1 mb-2">PROFESSIONAL SUMMARY</h2>
-              <p className="text-gray-700">{resumeData.summary}</p>
-            </div>
-          )}
+          {/* Summary Section - Always show with placeholder if empty */}
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-800 border-b pb-1 mb-2">PROFESSIONAL SUMMARY</h2>
+            <p className="text-gray-700">{resumeData.summary || "Write a brief overview of your professional background, skills, and career objectives. This section should highlight your strongest attributes and differentiate you from other candidates."}</p>
+          </div>
 
-          {/* Education Section */}
-          {resumeData.education && (
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-800 border-b pb-1 mb-2">EDUCATION</h2>
-              <p className="text-gray-700">{resumeData.education}</p>
-            </div>
-          )}
+          {/* Education Section - Always show with placeholder if empty */}
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-800 border-b pb-1 mb-2">EDUCATION</h2>
+            <p className="text-gray-700">{resumeData.education || "University of Example, Bachelor of Science in Computer Science (2016-2020)\nRelevant coursework: Data Structures, Algorithms, Database Systems, Web Development"}</p>
+          </div>
 
-          {/* Experience Section */}
-          {resumeData.experiences.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-800 border-b pb-1 mb-2">EXPERIENCE</h2>
-              {resumeData.experiences.map((exp, index) => (
+          {/* Experience Section - Always show with placeholder if empty */}
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-800 border-b pb-1 mb-2">EXPERIENCE</h2>
+            {resumeData.experiences.length > 0 ? (
+              resumeData.experiences.map((exp, index) => (
                 <div key={index} className="mb-4">
                   <div className="flex justify-between">
                     <h3 className="font-bold">{exp.title}</h3>
@@ -664,39 +796,61 @@ const ResumeTemplate = () => {
                   <p className="text-gray-600 italic">{exp.company}</p>
                   <p className="text-gray-700 mt-1">{exp.description}</p>
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            ) : (
+              <div className="mb-4">
+                <div className="flex justify-between">
+                  <h3 className="font-bold">Software Developer</h3>
+                  <span className="text-gray-600">2020 - Present</span>
+                </div>
+                <p className="text-gray-600 italic">Example Company, Inc.</p>
+                <p className="text-gray-700 mt-1">Developed and maintained web applications using React and Node.js. Collaborated with cross-functional teams to implement new features and resolve bugs.</p>
+              </div>
+            )}
+          </div>
 
-          {/* Skills Section */}
-          {resumeData.skills.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-800 border-b pb-1 mb-2">SKILLS</h2>
-              <div className="flex flex-wrap gap-2">
-                {resumeData.skills.map((skill, index) => (
+          {/* Skills Section - Always show with placeholder if empty */}
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-800 border-b pb-1 mb-2">SKILLS</h2>
+            <div className="flex flex-wrap gap-2">
+              {resumeData.skills.length > 0 ? (
+                resumeData.skills.map((skill, index) => (
                   <span key={index} className="bg-gray-100 px-2 py-1 rounded text-gray-700">{skill}</span>
-                ))}
-              </div>
+                ))
+              ) : (
+                <>
+                  <span className="bg-gray-100 px-2 py-1 rounded text-gray-700">JavaScript</span>
+                  <span className="bg-gray-100 px-2 py-1 rounded text-gray-700">React</span>
+                  <span className="bg-gray-100 px-2 py-1 rounded text-gray-700">Node.js</span>
+                  <span className="bg-gray-100 px-2 py-1 rounded text-gray-700">HTML/CSS</span>
+                  <span className="bg-gray-100 px-2 py-1 rounded text-gray-700">Git</span>
+                </>
+              )}
             </div>
-          )}
+          </div>
 
-          {/* Languages Section */}
-          {resumeData.languages.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-800 border-b pb-1 mb-2">LANGUAGES</h2>
-              <div className="flex flex-wrap gap-2">
-                {resumeData.languages.map((language, index) => (
+          {/* Languages Section - Always show with placeholder if empty */}
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-800 border-b pb-1 mb-2">LANGUAGES</h2>
+            <div className="flex flex-wrap gap-2">
+              {resumeData.languages.length > 0 ? (
+                resumeData.languages.map((language, index) => (
                   <span key={index} className="bg-gray-100 px-2 py-1 rounded text-gray-700">{language}</span>
-                ))}
-              </div>
+                ))
+              ) : (
+                <>
+                  <span className="bg-gray-100 px-2 py-1 rounded text-gray-700">English (Fluent)</span>
+                  <span className="bg-gray-100 px-2 py-1 rounded text-gray-700">Spanish (Intermediate)</span>
+                </>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Projects Section */}
-          {resumeData.projects.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-800 border-b pb-1 mb-2">PROJECTS</h2>
-              {resumeData.projects.map((project, index) => (
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-800 border-b pb-1 mb-2">PROJECTS</h2>
+            {resumeData.projects.length > 0 ? (
+              resumeData.projects.map((project, index) => (
                 <div key={index} className="mb-4">
                   <div className="flex justify-between">
                     <h3 className="font-bold">{project.title}</h3>
@@ -704,9 +858,20 @@ const ResumeTemplate = () => {
                   </div>
                   <p className="text-gray-700 mt-1">{project.description}</p>
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            ) : (
+              <div className="mb-4">
+                <div className="flex justify-between">
+                  <h3 className="font-bold">E-Commerce Website</h3>
+                  <span className="text-gray-600">2022</span>
+                </div>
+                <p className="text-gray-700 mt-1">
+                  Developed a full-stack e-commerce platform using React, Node.js, and MongoDB. 
+                  Implemented user authentication, product catalog, and payment processing.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

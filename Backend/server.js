@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 const upload = multer({ storage: multer.memoryStorage() });
 
 
-const GEMINI_API_KEY = 'AIzaSyA0_UIIgxWqwSJBiRqBL9bE-5WLFUWODhI';
+const GEMINI_API_KEY = 'AIzaSyA_mudXAEO8V0na6r9W67X-CdFvVTeaRLc';
 const GEMINI_MODEL = "gemini-1.5-pro";  // ✅ Use the correct model
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 

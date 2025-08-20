@@ -11,6 +11,9 @@ import CoverLetterGenerator from "./pages/CoverLetter";
 import ResumeEditor from "./components/ResumeEditor";
 import ResumeTemp2 from "./components/Resume temp2";
 import ResumeTemp3 from "./components/Resumetemp3";
+import ResumeTemp4 from "./components/Resumetemp4";
+import ResumeTemp5 from "./components/Resumetemp5";
+import ResumeTemp6 from "./components/Resumetemp6";
 
 const App = () => {
   return (
@@ -25,6 +28,9 @@ const App = () => {
         <Route path="/edit/:id1" element={<ResumeEditor />} />
         <Route path="/edit/template2" element={<ResumeTemp2 />} />
         <Route path="/edit/template3" element={<ResumeTemp3 />} />
+        <Route path="/edit/template4" element={<ResumeTemp4 />} />
+        <Route path="/edit/template5" element={<ResumeTemp5 />} />
+        <Route path="/edit/template6" element={<ResumeTemp6 />} />
       </Routes>
       <Footer />
     </Router>

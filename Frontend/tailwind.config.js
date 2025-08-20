@@ -1,13 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}", // Adjust as per your project structure
+  ],
   theme: {
     extend: {},
   },
-  future: {
-    disableColorPaletteOpacity: true, // Ensures colors use RGB/HEX instead of OKLCH
-  },
-  experimental: {
-    optimizeUniversalDefaults: true, // Prevents oklch() colors from being used
-  },
-  plugins: [],
+  plugins: [require("daisyui")],
 };
